@@ -15,15 +15,16 @@ app.register_blueprint(variant_bp)
 app.register_blueprint(car_bp)
 app.register_blueprint(rto_bp)
 
-metrics = PrometheusMetrics(app , group_by='endpoint')
+metrics = PrometheusMetrics(app , group_by='path')
 
 # cnt_salam_requests = metrics.counter('cnt_salam_requests', 'Number of requests to /api/salam')
 
-# @metrics.counter('cnt_salam_requests', 'Number of requests to /api/salam')
 @app.route('/api/salam')
+@metrics.counter('cnt_salam_requests', 'Number of requests to /api/salam')
 def hello():
     return {"message": "Salam, Flask!"}
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # For prometheus please do not start Flask app in debug mode
+    app.run(debug=False)
