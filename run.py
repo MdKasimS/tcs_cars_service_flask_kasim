@@ -17,7 +17,9 @@ app.register_blueprint(rto_bp)
 
 metrics = PrometheusMetrics(app , group_by='endpoint')
 
-@metrics.counter('cnt_salam_requests', 'Number of requests to /api/salam')
+# cnt_salam_requests = metrics.counter('cnt_salam_requests', 'Number of requests to /api/salam')
+
+# @metrics.counter('cnt_salam_requests', 'Number of requests to /api/salam')
 @app.route('/api/salam')
 def hello():
     return {"message": "Salam, Flask!"}
