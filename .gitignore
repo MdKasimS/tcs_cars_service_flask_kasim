@@ -12,3 +12,6 @@ routes/api/__pycache__/model_routes.cpython-313.pyc
 routes/api/__pycache__/oem_routes.cpython-313.pyc
 routes/api/__pycache__/rto_routes.cpython-313.pyc
 routes/api/__pycache__/variant_routes.cpython-313.pyc
+data/chunks_head/000001
+data/wal/00000000
+data/wal/00000001
