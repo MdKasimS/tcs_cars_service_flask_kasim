@@ -1,4 +1,5 @@
 from models.Database import db
+
 class OEM(db.Model):
     __tablename__ = 'rest_oem'  # Match existing table name
     id = db.Column(db.Integer, primary_key=True)
