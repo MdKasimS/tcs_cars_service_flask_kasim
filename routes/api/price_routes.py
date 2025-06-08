@@ -1,31 +1,70 @@
-from flask import Blueprint, jsonify
-import requests
-from models.Car import Car  # Import the OEM model
+from flask import Blueprint, json
+from models.Car import Car  
 import pickle
-from config import Config #PRICE_PREDICTOR_MODEL_PATH
+from config import Config 
 import pandas as pd
-from sklearn.preprocessing import LabelEncoder    
 
 
 price_bp = Blueprint('price_routes', __name__)
 model_load = pickle.load(open(file=Config.PRICE_PREDICTOR_MODEL_PATH,mode='rb'))
 
+class CustomEncoder():
+    fuels = {
+        'CNG': 0,
+        'Diesel': 1,
+        'Electric': 2,        
+        'LPG': 3,
+        'Petrol': 4,
+    }
+    
+    ownerType ={
+        'First Owner': 0,
+        'Fourth & Above Owner': 1,
+        'Second Owner': 2,
+        'Test Drive Car': 3,
+        'Third Owner': 4
+    } 
+
+    transmissions = {
+        "Automatic": 0,  
+        "Manual": 1,     
+    }   
+    
+    sellers = {   
+        'Dealer': 0,
+        'Individual': 1,
+        'Trustmark Dealer': 2
+    }    
+    
+    km_ranges = {
+        "high": 0,
+        "low": 1,
+        "medium": 2,
+    } 
+
+    year_ranges={
+        'Best': 0,
+        'Buy': 1,
+        'Junk': 2,
+        'Scrap': 3,
+    }
+
+    ex_ranges = {
+        'Affordable': 0,
+        'family': 1,
+        'Luxury': 2,
+        'Premium': 3
+    }
+ 
+
 # @metrics.counter('cnt_oems', 'Number of requests to /api/oems')
 @price_bp.route('/api/price/<int:id>', methods=['GET'])
 def get_pricePrediction(id):
-    # predictedSellingCarPriceById = Car.query.get(id)
+
     carById = Car.query.get(id)
+    print(carById.to_dict())    
     carById = pd.DataFrame([carById.to_dict()])  # Convert to DataFrame for processing
 
-    print(carById)
-
-    response = requests.get("http://localhost:5000/api/oems/" + str(carById['name_id'].values[0]))
-    
-    if response.status_code == 200:  # Ensure request was successful
-        carById['company_name'] = jsonify(response.json()) 
-    else:
-        return {"error": "OEM not found"}, 404
-        
     km_ranges=['low','medium','high']
     limits=[0,35000,100000,2000000]
     carById['km_range']=pd.cut(carById['km_driven'],bins=limits,labels=km_ranges)
@@ -38,65 +77,77 @@ def get_pricePrediction(id):
     limits=[0,500000,1000000,1500000,20000000]
     carById['ex_range']=pd.cut(carById['car_showroom_price'],bins=limits,labels=ex_range)
 
-    print(carById)
+    # ----Model Specific Data Formatting----------
+    
+    # "id": 11,
 
-    # ----Lable encoding----------
-    EN = LabelEncoder()
-    # carById['fuel']= EN.fit_transform(carById['fuel'])
-    # carById['owner']=EN.fit_transform(carById['owner'])
-    # carById['transmission']=EN.fit_transform(carById['transmission'])
-    # carById['name']=EN.fit_transform(carById['name'])
-    # carById['seller_type']=EN.fit_transform(carById['seller_type'])
-    # carById['company_name']=EN.fit_transform(carById['company_name'])
-    # carById['km_range']=EN.fit_transform(carById['km_range'])
-    # carById['year_range']=EN.fit_transform(carById['year_range'])
-    # carById['ex_range']=EN.fit_transform(carById['ex_range'])
+    # "car_showroom_price": 737176,
+    # "ex_range": "family",
+    
+    # "name_id": 10,
+    # "company_name": "Renault",
+    
+    # "year": 2014,
+    # "year_range": "Buy"
 
-    return jsonify({"Selling Price": carById.to_dict()})
+    # "fuel": "Diesel",
+    
+    # "km_driven": 66569,
+    # "km_range": "medium",
+    
+    # "owner": "First Owner",
+    
+    # "rating": 8,
+    
+    # "seller_type": "Dealer",
+    
+    # "transmission": "Manual",
+    
+
+    year = carById['year'].values[0]
+    km_driven = carById['km_driven'].values[0]
+    carById['fuel']= CustomEncoder.fuels[carById['fuel'].values[0]]  # Convert fuel type to numerical value
+    carById['owner']= CustomEncoder.ownerType[carById['owner'].values[0]] # Convert owner type to numerical value
+    carById['transmission']= CustomEncoder.transmissions[carById['transmission'].values[0]]  # Convert transmission type to numerical value
+    carById['seller_type']= CustomEncoder.sellers[carById['seller_type'].values[0]]  # Convert seller type to numerical value
+    carById['company_name']= carById['name_id'].values[0]  # Assuming name_id is the company ID
+    carById['km_range']= CustomEncoder.km_ranges[carById['km_range'].values[0]]  # Convert km_range to numerical value
+    carById['year_range']= CustomEncoder.year_ranges[carById['year_range'].values[0]]  # Convert year_range to numerical value
+    carById['ex_range']= CustomEncoder.ex_ranges[carById['ex_range'].values[0]]  # Convert ex_range to numerical value
+    rating = carById['rating'].values[0]
+
+    # predictedSellingCarPriceById =  model_load.predict(carById)[0]
+
+    
+    # ------------------ Output -------------------
+    # Error:-> return jsonify({"selling_price":carById.to_dict()})
+    # Flask's jsonify function expects a dictionary or list, not a DataFrame
+    # Convert DataFrame to dictionary and then to JSON
+    # It happened due to presence of numpy.int64 values in the DataFrame
+    # which are not JSON serializable by default.
+
+    # Same issue of numpy.int64 values in the DataFrame
+    # return jsonify({
+    #     # "selling_price": model_load.predict(carById)[0],
+    #     "year": carById['year'].values[0],
+    #     "km_driven": carById['km_driven'].values[0],
+    #     "fuel": carById['fuel'].values[0],
+    #     "seller_type": carById['seller_type'].values[0],
+    #     "transmission": carById['transmission'].values[0],
+    #     "owner": carById['owner'].values[0],
+    #     "rating": carById['rating'].values[0],
+    #     "company_name": carById['company_name'].values[0],
+    #     "km_range": carById['km_range'].values[0],
+    #     "year_range": carById['year_range'].values[0],
+    #     "ex_range": carById['ex_range'].values[0]
+    # })     
+
+    # This does not work as well
+    # due to maximu recursion level reached
+    # return carById.to_json(orient="records")
+
+    # Worked only to Convert DataFrame to dictionary without index with orient="records"
+    return json.dumps(carById.to_dict(orient="records")), 200, {'Content-Type': 'application/json'}
 
 
-# year 
-# km_driven 
-# fuel
-# seller_type
-# transmission 
-# owner
-# Rating
-# company_name
-# km_range
-# year_range 
-# ex_range
 
-
-# ----Feature Engineering-----
-
-#Company Names
-    # OEM names are directly available in api
-
-# Kilometers
-# km_ranges=['low','medium','high']
-# limits=[0,35000,100000,2000000]
-# data['km_range']=pd.cut(data['km_driven'],bins=limits,labels=km_ranges)
-
-# Year
-# year_ranges=['Junk','Scrap','Buy','Best']
-# limits=[1991,2005,2010,2015,2020]
-# data['year_range']=pd.cut(data['year'],bins=limits,labels=year_ranges)
- 
-# Exshowroom 
-# ex_range=['Affordable','family','Luxury','Premium']
-# limits=[0,500000,1000000,1500000,20000000]
-# data['ex_range']=pd.cut(data['ExShowroom Price'],bins=limits,labels=ex_range)
-
-# ----Lable encoding----------
-# EN = LabelEncoder()
-# data['fuel']= EN.fit_transform(data['fuel'])
-# data['owner']=EN.fit_transform(data['owner'])
-# data['transmission']=EN.fit_transform(data['transmission'])
-# data['name']=EN.fit_transform(data['name'])
-# data['seller_type']=EN.fit_transform(data['seller_type'])
-
-# data['company_name']=EN.fit_transform(data['company_name'])
-# data['km_range']=EN.fit_transform(data['km_range'])
-# data['year_range']=EN.fit_transform(data['year_range'])
-# data['ex_range']=EN.fit_transform(data['ex_range'])
