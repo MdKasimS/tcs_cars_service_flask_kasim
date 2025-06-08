@@ -18,3 +18,4 @@ data/wal/00000001
 data/queries.active
 .vscode/settings.json
 .vscode/settings.json
+routes/api/__pycache__/price_routes.cpython-313.pyc

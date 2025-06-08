@@ -14,6 +14,7 @@ from routes.api.variant_routes import variant_bp
 from routes.api.car_routes import car_bp
 from routes.api.model_routes import model_bp
 from routes.api.rto_routes import rto_bp
+from routes.api.price_routes import price_bp
 
 
 app.register_blueprint(oem_bp)
@@ -21,6 +22,7 @@ app.register_blueprint(model_bp)
 app.register_blueprint(variant_bp)
 app.register_blueprint(car_bp)
 app.register_blueprint(rto_bp)
+app.register_blueprint(price_bp)
 
 metrics = PrometheusMetrics(app , group_by='path')
 
@@ -50,14 +52,17 @@ if __name__ == '__main__':
     app.run(debug=False)
 
 # year               2017.0
-# km_driven        120000.0
-# fuel                  1.0
-# seller_type           1.0
+# year_range            0.0 
 # transmission          1.0
-# owner                 0.0
-# Rating                9.0
-# selling_price    628000.0
-# company_name         17.0
+# seller_type           1.0
+# km_driven        120000.0
 # km_range              0.0
-# year_range            0.0
+# Rating                9.0
+# owner                 0.0
+# fuel                  1.0
 # ex_range              3.0
+# company_name         17.0
+
+# selling_price    628000.0
+
+# year , km_driven , fuel, seller_type, transmission , owner, Rating, selling_price, company_name, km_range, year_range , ex_range

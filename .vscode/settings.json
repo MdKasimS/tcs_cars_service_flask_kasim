@@ -7,8 +7,8 @@
             "askForPassword": true,
             "driver": "PostgreSQL",
             "name": "TheCarShop_Postgres",
-            "database": "TheCarShop",
-            "username": "admin"
+            "database": "TheCarShopDb",
+            "username": "postgres"
         }
     ]
 }
