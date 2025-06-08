@@ -62,7 +62,6 @@ class CustomEncoder():
 def get_pricePrediction(id):
 
     carById = Car.query.get(id)
-    print(carById.to_dict())    
     carById = pd.DataFrame([carById.to_dict()])  # Convert to DataFrame for processing
 
     km_ranges=['low','medium','high']
@@ -77,6 +76,8 @@ def get_pricePrediction(id):
     limits=[0,500000,1000000,1500000,20000000]
     carById['ex_range']=pd.cut(carById['car_showroom_price'],bins=limits,labels=ex_range)
 
+    print("After adding range columns:")
+    print(carById)    
     # ----Model Specific Data Formatting----------
     
     # "id": 11,
@@ -115,6 +116,37 @@ def get_pricePrediction(id):
     carById['year_range']= CustomEncoder.year_ranges[carById['year_range'].values[0]]  # Convert year_range to numerical value
     carById['ex_range']= CustomEncoder.ex_ranges[carById['ex_range'].values[0]]  # Convert ex_range to numerical value
     rating = carById['rating'].values[0]
+
+    print("After rounding")
+    round(carById.describe(),2)
+    print(carById)
+
+    modelSpecificColumns = [
+        'year',
+        'km_driven',
+        'fuel',
+        'seller_type',
+        'transmission',
+        'owner',
+        'rating',
+        'company_name',
+        'km_range',
+        'year_range',
+        'ex_range'
+    ]
+
+    # Ensure only the model-specific columns are retained
+    modelSpecifcCarById = carById[modelSpecificColumns].copy()
+    print("Slice of model specific columns\n", modelSpecifcCarById)   
+
+    
+    print("After scaling")
+    all_x=list(modelSpecifcCarById.columns)
+    print(modelSpecifcCarById.info(), all_x)
+    modelSpecifcCarById[all_x]=modelSpecifcCarById[all_x]/(modelSpecifcCarById[all_x].max())
+    round(modelSpecifcCarById.describe(),2)
+    print("After scaling & round", modelSpecifcCarById)
+
 
     # predictedSellingCarPriceById =  model_load.predict(carById)[0]
 
