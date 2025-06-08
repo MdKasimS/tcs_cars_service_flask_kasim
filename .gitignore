@@ -16,3 +16,4 @@ data/chunks_head/000001
 data/wal/00000000
 data/wal/00000001
 data/queries.active
+.vscode/settings.json
