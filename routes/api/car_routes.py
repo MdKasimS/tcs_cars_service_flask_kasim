@@ -15,7 +15,6 @@ def get_all_cars():
     return jsonify([car.to_dict() for car in cars])  # Return list of cars
 
 # Create a new car record
-#TODO: Please do test this POST for Cars
 @car_bp.route('/api/cars', methods=['POST'])
 def create_car():
     latest_car = Car.query.order_by(Car.id.desc()).first()
