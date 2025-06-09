@@ -1,4 +1,5 @@
 from flask import Blueprint, json
+from sklearn.preprocessing import PolynomialFeatures
 from models.Car import Car  
 import pickle
 from config import Config 
@@ -70,13 +71,12 @@ class CustomEncoder():
         'ex_range':3.0,
     }
 
-# max	1490.0	2020.0	806599.0	4.0	2.0	1.0	4.0	15.0	15538153.0	28.0	2.0	3.0	3.0
-
 # @metrics.counter('cnt_oems', 'Number of requests to /api/oems')
 @price_bp.route('/api/price/<int:id>', methods=['GET'])
 def get_pricePrediction(id):
 
     carById = Car.query.get(id)
+    # carById.to_dict() - Car object must be serialized to a dictionary
     carById = pd.DataFrame([carById.to_dict()])  # Convert to DataFrame for processing
 
     km_ranges=['low','medium','high']
@@ -117,9 +117,6 @@ def get_pricePrediction(id):
     
     # "transmission": "Manual",
     
-
-    year = carById['year'].values[0]
-    km_driven = carById['km_driven'].values[0]
     carById['fuel']= CustomEncoder.fuels[carById['fuel'].values[0]]  # Convert fuel type to numerical value
     carById['owner']= CustomEncoder.ownerType[carById['owner'].values[0]] # Convert owner type to numerical value
     carById['transmission']= CustomEncoder.transmissions[carById['transmission'].values[0]]  # Convert transmission type to numerical value
@@ -128,8 +125,6 @@ def get_pricePrediction(id):
     carById['km_range']= CustomEncoder.km_ranges[carById['km_range'].values[0]]  # Convert km_range to numerical value
     carById['year_range']= CustomEncoder.year_ranges[carById['year_range'].values[0]]  # Convert year_range to numerical value
     carById['ex_range']= CustomEncoder.ex_ranges[carById['ex_range'].values[0]]  # Convert ex_range to numerical value
-    rating = carById['rating'].values[0]
-
     
     modelSpecificColumns = [
         'year',
@@ -152,11 +147,12 @@ def get_pricePrediction(id):
         modelSpecificCarData[colName] = modelSpecificCarData[colName].astype('float64')
         modelSpecificCarData[colName].values[0] = modelSpecificCarData[colName].values[0] / CustomEncoder.maxValues[colName]
         
-
     round(modelSpecificCarData.describe(),2)
 
-    # predictedSellingCarPriceById =  model_load.predict(carById)[0]
+    poly_reg = PolynomialFeatures(degree=2)
+    modelSpecificCarData = poly_reg.fit_transform(modelSpecificCarData)
 
+    predictedSellingCarPriceById =  model_load.predict(modelSpecificCarData)[0]
     
     # ------------------ Output -------------------
     # Error:-> return jsonify({"selling_price":carById.to_dict()})
@@ -187,7 +183,14 @@ def get_pricePrediction(id):
 
     # Worked only to Convert DataFrame to dictionary without index with orient="records"
     # return json.dumps(carById.to_dict(orient="records")), 200, {'Content-Type': 'application/json'}
-    return json.dumps(modelSpecificCarData.to_dict(orient="records")), 200, {'Content-Type': 'application/json'}
+
+    # Keep this for easier data testing
+    # return json.dumps({"Actual Data": carById.to_dict(orient="records"),
+    #                     "Transformed Data": modelSpecificCarData.tolist(),
+    #                    "Predicted Selling Price": predictedSellingCarPriceById}), 200 , {'Content-Type': 'application/json'}   
+                       
+                       
+    return json.dumps({"selling_price": predictedSellingCarPriceById}), 200, {'Content-Type': 'application/json'}   
 
 
 
