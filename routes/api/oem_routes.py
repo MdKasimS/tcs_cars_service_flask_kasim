@@ -16,3 +16,8 @@ def get_oem_by_id(oem_id):
         return oem.to_dict()  # Convert to dictionary and return
     return {"error": "OEM not found"}, 404  # Return error if ID does not exist
 
+# Example of an OEM record in the database    
+# id	name
+# 19	Mercedes-Benz
+
+

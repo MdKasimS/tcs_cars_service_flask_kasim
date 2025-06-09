@@ -84,6 +84,7 @@ class CustomEncoder():
         'year_range',
         'ex_range'
     ]
+
 # @metrics.counter('cnt_oems', 'Number of requests to /api/oems')
 @price_bp.route('/api/price/<int:id>', methods=['GET'])
 def get_pricePrediction(id):
@@ -114,8 +115,6 @@ def get_pricePrediction(id):
     carById['year_range']= CustomEncoder.year_ranges[carById['year_range'].values[0]]  # Convert year_range to numerical value
     carById['ex_range']= CustomEncoder.ex_ranges[carById['ex_range'].values[0]]  # Convert ex_range to numerical value
     
-    
-
     # Ensure only the model-specific columns are retained
     modelSpecificCarData = carById[CustomEncoder.modelSpecificColumns].copy()
 
