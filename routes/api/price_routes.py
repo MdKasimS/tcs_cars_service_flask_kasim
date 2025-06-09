@@ -71,6 +71,19 @@ class CustomEncoder():
         'ex_range':3.0,
     }
 
+    modelSpecificColumns = [
+        'year',
+        'km_driven',
+        'fuel',
+        'seller_type',
+        'transmission',
+        'owner',
+        'rating',
+        'company_name',
+        'km_range',
+        'year_range',
+        'ex_range'
+    ]
 # @metrics.counter('cnt_oems', 'Number of requests to /api/oems')
 @price_bp.route('/api/price/<int:id>', methods=['GET'])
 def get_pricePrediction(id):
@@ -91,31 +104,6 @@ def get_pricePrediction(id):
     limits=[0,500000,1000000,1500000,20000000]
     carById['ex_range']=pd.cut(carById['car_showroom_price'],bins=limits,labels=ex_range)
 
-    # ----Model Specific Data Formatting----------
-    
-    # "id": 11,
-
-    # "car_showroom_price": 737176,
-    # "ex_range": "family",
-    
-    # "name_id": 10,
-    # "company_name": "Renault",
-    
-    # "year": 2014,
-    # "year_range": "Buy"
-
-    # "fuel": "Diesel",
-    
-    # "km_driven": 66569,
-    # "km_range": "medium",
-    
-    # "owner": "First Owner",
-    
-    # "rating": 8,
-    
-    # "seller_type": "Dealer",
-    
-    # "transmission": "Manual",
     
     carById['fuel']= CustomEncoder.fuels[carById['fuel'].values[0]]  # Convert fuel type to numerical value
     carById['owner']= CustomEncoder.ownerType[carById['owner'].values[0]] # Convert owner type to numerical value
@@ -126,22 +114,10 @@ def get_pricePrediction(id):
     carById['year_range']= CustomEncoder.year_ranges[carById['year_range'].values[0]]  # Convert year_range to numerical value
     carById['ex_range']= CustomEncoder.ex_ranges[carById['ex_range'].values[0]]  # Convert ex_range to numerical value
     
-    modelSpecificColumns = [
-        'year',
-        'km_driven',
-        'fuel',
-        'seller_type',
-        'transmission',
-        'owner',
-        'rating',
-        'company_name',
-        'km_range',
-        'year_range',
-        'ex_range'
-    ]
+    
 
     # Ensure only the model-specific columns are retained
-    modelSpecificCarData = carById[modelSpecificColumns].copy()
+    modelSpecificCarData = carById[CustomEncoder.modelSpecificColumns].copy()
 
     for colName in CustomEncoder.maxValues:
         modelSpecificCarData[colName] = modelSpecificCarData[colName].astype('float64')
@@ -194,3 +170,28 @@ def get_pricePrediction(id):
 
 
 
+# ----Model Specific Data Formatting----------
+    
+    # "id": 11,
+
+    # "car_showroom_price": 737176,
+    # "ex_range": "family",
+    
+    # "name_id": 10,
+    # "company_name": "Renault",
+    
+    # "year": 2014,
+    # "year_range": "Buy"
+
+    # "fuel": "Diesel",
+    
+    # "km_driven": 66569,
+    # "km_range": "medium",
+    
+    # "owner": "First Owner",
+    
+    # "rating": 8,
+    
+    # "seller_type": "Dealer",
+    
+    # "transmission": "Manual",

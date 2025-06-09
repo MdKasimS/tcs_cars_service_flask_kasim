@@ -26,8 +26,6 @@ app.register_blueprint(price_bp)
 
 metrics = PrometheusMetrics(app , group_by='path')
 
-# cnt_salam_requests = metrics.counter('cnt_salam_requests', 'Number of requests to /api/salam')
-
 @app.route('/api/salam', methods=['GET'])
 @metrics.counter('cnt_salam_requests', 'Number of requests to /api/salam')
 def hello():
