@@ -18,7 +18,12 @@ def get_all_cars():
 #TODO: Please do test this POST for Cars
 @car_bp.route('/api/cars', methods=['POST'])
 def create_car():
+    latest_car = Car.query.order_by(Car.id.desc()).first()
+    latest_id = latest_car.id if latest_car else None  # Handle empty table case
+    latest_id += 1
     data = request.json
+    data['id'] = latest_id
+    print(data)  # Debugging: print the incoming data
     new_car = Car(**data)  # Assuming car model fields match request data keys
     db.session.add(new_car)
     db.session.commit()
@@ -48,3 +53,22 @@ def delete_car(id):
 # Example of a car record in the database
 # id	car_showroom_price	year	km_driven	fuel	seller_type	transmission	owner	    rating	car_model_id	car_variant_id	name_id
 # 15	272090	            2015	70000	    Petrol	Individual	Manual	        First Owner	9	    8	            101	            2
+
+# For API testing query form encoded data
+# Example of a POST request to create a new car record
+# car_showroom_price=272090&year=2015&km_driven=70000&fuel=Petrol&seller_type=Individual&transmission=Manual&owner=First%20Owner&rating=9&car_model_id=8&car_variant_id=101&name_id=2
+
+# JSON Example for POST request
+# {
+#     "car_showroom_price": 729502,
+#     "year": 2010,
+#     "km_driven": 73000,
+#     "fuel": "Petrol",
+#     "seller_type": "Individual",
+#     "transmission": "Manual",
+#     "owner": "First Owner",
+#     "rating": 8,
+#     "car_model_id": 44,
+#     "car_variant_id": 489,
+#     "name_id": 2
+# }
