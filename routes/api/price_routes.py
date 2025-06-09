@@ -56,6 +56,21 @@ class CustomEncoder():
         'Premium': 3
     }
  
+    maxValues = {
+        'year': 2020.0,
+        'km_driven':806599.0,
+        'fuel':4.0,
+        'seller_type':2.0,
+        'transmission':1.0,
+        'owner':4.0,
+        'rating':15.0,
+        'company_name':28.0,
+        'km_range':2.0,
+        'year_range':3.0,
+        'ex_range':3.0,
+    }
+
+# max	1490.0	2020.0	806599.0	4.0	2.0	1.0	4.0	15.0	15538153.0	28.0	2.0	3.0	3.0
 
 # @metrics.counter('cnt_oems', 'Number of requests to /api/oems')
 @price_bp.route('/api/price/<int:id>', methods=['GET'])
@@ -76,8 +91,6 @@ def get_pricePrediction(id):
     limits=[0,500000,1000000,1500000,20000000]
     carById['ex_range']=pd.cut(carById['car_showroom_price'],bins=limits,labels=ex_range)
 
-    print("After adding range columns:")
-    print(carById)    
     # ----Model Specific Data Formatting----------
     
     # "id": 11,
@@ -117,10 +130,7 @@ def get_pricePrediction(id):
     carById['ex_range']= CustomEncoder.ex_ranges[carById['ex_range'].values[0]]  # Convert ex_range to numerical value
     rating = carById['rating'].values[0]
 
-    print("After rounding")
-    round(carById.describe(),2)
-    print(carById)
-
+    
     modelSpecificColumns = [
         'year',
         'km_driven',
@@ -136,17 +146,14 @@ def get_pricePrediction(id):
     ]
 
     # Ensure only the model-specific columns are retained
-    modelSpecifcCarById = carById[modelSpecificColumns].copy()
-    print("Slice of model specific columns\n", modelSpecifcCarById)   
+    modelSpecificCarData = carById[modelSpecificColumns].copy()
 
-    
-    print("After scaling")
-    all_x=list(modelSpecifcCarById.columns)
-    print(modelSpecifcCarById.info(), all_x)
-    modelSpecifcCarById[all_x]=modelSpecifcCarById[all_x]/(modelSpecifcCarById[all_x].max())
-    round(modelSpecifcCarById.describe(),2)
-    print("After scaling & round", modelSpecifcCarById)
+    for colName in CustomEncoder.maxValues:
+        modelSpecificCarData[colName] = modelSpecificCarData[colName].astype('float64')
+        modelSpecificCarData[colName].values[0] = modelSpecificCarData[colName].values[0] / CustomEncoder.maxValues[colName]
+        
 
+    round(modelSpecificCarData.describe(),2)
 
     # predictedSellingCarPriceById =  model_load.predict(carById)[0]
 
@@ -179,7 +186,8 @@ def get_pricePrediction(id):
     # return carById.to_json(orient="records")
 
     # Worked only to Convert DataFrame to dictionary without index with orient="records"
-    return json.dumps(carById.to_dict(orient="records")), 200, {'Content-Type': 'application/json'}
+    # return json.dumps(carById.to_dict(orient="records")), 200, {'Content-Type': 'application/json'}
+    return json.dumps(modelSpecificCarData.to_dict(orient="records")), 200, {'Content-Type': 'application/json'}
 
 
 
