@@ -160,12 +160,12 @@ def get_pricePrediction(id):
     # return json.dumps(carById.to_dict(orient="records")), 200, {'Content-Type': 'application/json'}
 
     # Keep this for easier data testing
-    # return json.dumps({"Actual Data": carById.to_dict(orient="records"),
-    #                     "Transformed Data": modelSpecificCarData.tolist(),
-    #                    "Predicted Selling Price": predictedSellingCarPriceById}), 200 , {'Content-Type': 'application/json'}   
+    return json.dumps({"Actual Data": carById.to_dict(orient="records"),
+                        "Transformed Data": modelSpecificCarData.tolist(),
+                       "Predicted Selling Price": predictedSellingCarPriceById}), 200 , {'Content-Type': 'application/json'}   
                        
                        
-    return json.dumps({"selling_price": predictedSellingCarPriceById}), 200, {'Content-Type': 'application/json'}   
+    # return json.dumps({"selling_price": predictedSellingCarPriceById}), 200, {'Content-Type': 'application/json'}   
 
 
 
